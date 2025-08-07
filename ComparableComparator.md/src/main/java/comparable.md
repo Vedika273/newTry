@@ -1,0 +1,340 @@
+# 2.4 Comparable and Comparator
+
+## 1. Sorting Collection of  Java-defined Class Data
+
+When working with a collection of Java-defined class data, such as an `ArrayList<Integer>`, we often need to sort the elements in a specific order (ascending or descending).
+
+Defining a Sorting Rule
+
+To sort elements, we must first define a rule for comparing two objectsâ€”determining which is larger and which is smaller. Based on this comparison:
+* Ascending order: Place the smaller element before the larger one.
+* Descending order: Place the larger element before the smaller one.
+
+We can use the `Collections.sort()` method to sort the collection ascendingly. If we want the data to be sorted descendingly, we can use the `Collections.reverse()` method after.
+
+```java
+ArrayList<Integer> nums = new ArrayList<>(Arrays.asList(new Integer[]{1, 3, 4, 2}));
+
+// sort the data ascendingly
+Collections.sort(nums);			// 1, 2, 3, 4		
+
+// revere the order of the data
+Collections.reverse(nums);			// 4, 3, 2, 1
+```
+
+You can also use these methods to sort Strings, then the strings will be alphabetically sorted (also can be ascendingly and descendingly).
+
+## 2. Sorting Collection of User-defined Class Objects
+
+Previously, we saw how Java can easily sort an `ArrayList<Integer>` or an `ArrayList<String>` because the sorting rules for numbers and strings are well-defined. However, if we have an `ArrayList<Student>` where each `Student` has attributes like `id`, `fname`, `lname`, `age`, and `gender`, Java wonâ€™t know how to sort the list. Should the sorting be based on `fname`, `age`, or `gender`?
+
+Since Java cannot automatically determine the sorting rule, a user-defined class is not Comparable by default. We must explicitly define a sorting rule for Java to sort objects of that class.
+
+```java
+public class Student implements Comparable<Student> {       // implement the interface
+    private String id;
+    private String fname;
+    private String lname;
+    private int age;
+    private char gender;
+
+    // methods of the class 
+}
+```
+
+```java
+public static void main(String[] args) {
+    ArrayList<Student> students = new ArrayList<>();
+    students.add(new Student("1", "yi", "wang", 36, 'm'));
+    students.add(new Student("2", "mike", "conna", 18, 'm'));
+    students.add(new Student("3", "jon", "a", 22, 'm'));
+    students.add(new Student("4", "jon", "c", 22, 'f'));
+    students.add(new Student("5", "jon", "b", 22, 'f'));
+    students.add(new Student("6", "jon", "d", 22, 'm'));
+    students.add(new Student("-1", "jon", "d", 22, 'm'));
+}
+```
+
+There are two ways to solve this problem:
+1. Using `Comparable` â€“ If the data should always be sorted using one specific rule, implement the `Comparable` interface. For example, if students should always be sorted by `name`, we define a natural ordering based on that field.
+2. Using `Comparator` â€“ If the data needs to be sorted using multiple different rules, implement the `Comparator` interface. This allows sorting by `name` in one case, `age` in another, and `gender` in yet another, providing greater flexibility.
+
+## 3. Comparable
+
+If we need to define one specific rule to compare two `Student` objects, we can use the `Comparable` interface. This interface includes the abstract method `compareTo()`, which is used to define the sorting rule.
+
+To achieve this, we make the Student class `implement Comparable<Student>` and override the `compareTo()` method inside the class.
+
+How `compareTo()` Works
+
+The `compareTo()` method behaves similarly to `equals()`, but instead of returning a boolean, it returns an integer:
+* A positive value (`> 0`) means the current object (`this`) is greater than the compared object.
+* A negative value (`< 0`) means the current object (`this`) is smaller than the compared object.
+* A zero (`0`) means the two objects are equal in terms of sorting.
+
+The exact magnitude of the returned integer does not matter, only its sign is important. For example, returning `4` or `999` both indicate that `this` is greater, while returning `-1` or `-100` means `this` is smaller.
+
+Example: Sorting Students by `age`
+
+If we want to compare students based on their age, we can represent the two students as `this.age` and `student.age`. Since `age` is an `int`, we can simply subtract them to determine the order:
+
+```java
+public class Student implements Comparable<Student> { 
+    @Override
+    public int compareTo(Student student) {
+        return this.age - student.age;              // sort based on the age, ascending
+//        return student.age - this.age;              // sort based on the age, descending
+    }
+}
+```
+
+```java
+public static void main(String[] args) {
+    ArrayList<Student> students = new ArrayList<>();
+    students.add(new Student("1", "yi", "wang", 36, 'm'));
+    students.add(new Student("2", "mike", "conna", 18, 'm'));
+    students.add(new Student("3", "jon", "a", 22, 'm'));
+    students.add(new Student("4", "jon", "c", 22, 'f'));
+    students.add(new Student("5", "jon", "b", 22, 'f'));
+    students.add(new Student("6", "jon", "d", 22, 'm'));
+    students.add(new Student("-1", "jon", "d", 22, 'm'));
+    
+    Collections.sort(students);
+}
+```
+
+You can also modify the sorting rule. For example, if you want to sort students based on their `fname`, you need to update the `compareTo()` method accordingly.
+
+In this case, we extract the two first names using `this.fname` and `student.fname`. However, since `fname` is a String, we cannot use subtraction (`-`) as we did with integers.
+
+Fortunately, all Java-defined classes that have a natural ordering implement `Comparable` by default, including `String`, `Integer`, and `Double`. This means they already contain a built-in `compareTo()` method, which we can use directly to compare two values of these types.
+
+
+```java
+public class Student implements Comparable<Student> { 
+    @Override
+    public int compareTo(Student student) {
+        return this.fname.compareTo(student.fname);   // sort based on the fname, ascending
+    }
+}
+```
+
+The data we have contains students with the same `fname`s :
+
+```java
+students.add(new Student("1", "yi", "wang", 36, 'm'));
+students.add(new Student("2", "mike", "conna", 18, 'm'));
+students.add(new Student("3", "jon", "a", 22, 'm'));			// same fname
+students.add(new Student("4", "jon", "c", 22, 'f'));			// same fname
+students.add(new Student("5", "jon", "b", 22, 'f'));			// same fname
+students.add(new Student("6", "jon", "d", 22, 'm'));			// same fname
+students.add(new Student("-1", "jon", "d", 22, 'm'));			// same fname
+```
+
+When sorting a long list of data, itâ€™s common for some elements to have the same value for a particular feature. If we only use `this.fname.compareTo(student.fname)`, elements with the same `fname` will be treated as equal (`compareTo()` returns `0`), and Java will not sort them further.
+
+However, we may want to sort by `lname` as a secondary criterion when fnames are identical. In this case, we need to expand the sorting rule in the `compareTo()` method, i.e.: Weighted Comparison:
+
+```java
+public class Student implements Comparable<Student> { 
+    @Override
+    public int compareTo(Student student) {
+        return this.fname.compareTo(student.fname) * 100   // sort based on the fname ascending
+            	+ this.lname.compareTo(student.lname) ;   // then lname ascending
+    }
+}
+```
+
+Here, multiplying `fname`â€™s comparison result by a large value (e.g., `1000`) ensures that differences in fname always dominate, while `lname` is only considered if fnames are equal.
+
+This approach ensures a stable and meaningful ordering, first by `fname` and then by `lname` when needed.
+
+This logic can be expanded further to compare additional attributes if needed. For example, if both `fname` and `lname` are equal, we can compare the `id` to ensure a fully ordered list.
+
+```java
+public class Student implements Comparable<Student> { 
+    @Override
+    public int compareTo(Student student) {
+        return this.fname.compareTo(student.fname) * 10000	    	 // sort based on the fname ascending
+            	+ this.lname.compareTo(student.lname) * 100;    	 // then lname ascending
+                 + this.id.compareTo(student.id) ;    				// then id ascending
+    }
+}
+```
+
+## Comparator
+
+The `Comparable` interface is useful when you need a single, predefined sorting rule for a class. However, in many scenarios, multiple sorting criteria are required. For example, a teacher may want to sort students by `name` in some cases and by `score` in others. Similarly, an online shopping platform might allow customers to sort products by `date added` or `price`.
+
+Since `Comparable` only supports one sorting method, it does not allow users to switch between different sorting rules dynamically. To solve this, we use the `Comparator` interface.
+
+With `Comparator`, we can define multiple sorting strategies by creating separate comparator classes that implement the `Comparator` interface. This approach does not require modifying the original class (e.g., `Student`).
+
+For instance, if we want to compare students based on their `age`s, we can create an `AgeComparator` class that implements `Comparator<Student>`. The `Comparator` interface provides the `compare()` method, which is similar to the `compareTo()` method in Comparable, except that it takes two objects as arguments instead of one.
+
+```java
+/**
+ * A Comparator to compare two students based on their ages, then fname, then lname
+ */
+public static class AgeComparator implements Comparator<Student> {
+
+    @Override
+    public int compare(Student s1, Student s2) {
+        return (s1.age - s2.age) * 10000
+            + s1.fname.compareTo(s2.fname)
+            + s1.lname.compareTo(s2.lname);
+    }
+}
+```
+
+```java
+/**
+ * A Comparator to compare two students based on their gender, then fname,
+ * then lname, then id
+ */
+public static class GenderComparator implements Comparator<Student> {
+
+    @Override
+    public int compare(Student s1, Student s2) {
+        return (s1.gender - s2.gender) * 1000000
+            + s1.fname.compareTo(s2.fname) * 10000
+            + s1.lname.compareTo(s2.lname) * 100
+            + s1.id.compareTo(s2.id);
+    }
+}
+```
+
+Now that we have created three separate comparator classes, each with a specific sorting rule, we can use the `Collections.sort()` method to sort the data by passing the corresponding comparator as the second parameter.
+
+```java
+/**
+ * Asks the user to choose a specific way to sort the students
+ *
+ * @param students the original students list
+ */
+public static void sortStudents(ArrayList<Student> students) {
+    System.out.println("How do you want to sort the students");
+    System.out.println("1. based on the age");
+    System.out.println("2. based on the name");
+    System.out.println("3. based on the gender");
+
+    Scanner console = new Scanner(System.in);
+    int choice = console.nextInt();
+
+    switch (choice) {
+        case 1:
+            Collections.sort(students, new Student.AgeComparator());		// sort based on age
+            return;
+        case 2:
+            Collections.sort(students, new Student.NameComparator());		// sort based on name
+            return;
+        case 3:
+            Collections.sort(students, new Student.GenderComparator());		// sort based on gender
+            return;
+    }
+}
+```
+
+In practice, we can enhance the flexibility of comparators by embedding them within a class or even combining multiple comparators into a single one. This allows us to customize sorting behaviors based on different criteria in a more structured way.
+
+1. Embedding Comparators inside a class:
+
+We can define a comparator as an inner class inside the class we want to sort. This can help group the comparator with the class itâ€™s related to, improving organization and readability.
+
+
+``` java
+public class Student {
+    String name;
+    int age;
+    int score;
+
+    public Student(String name, int age, int score) {
+        this.name = name;
+        this.age = age;
+        this.score = score;
+    }
+
+    public static class AgeComparator implements Comparator<Student> {
+        @Override
+        public int compare(Student s1, Student s2) {
+            return Integer.compare(s1.age, s2.age);
+        }
+    }
+
+    public static class NameComparator implements Comparator<Student> {
+        @Override
+        public int compare(Student s1, Student s2) {
+            return s1.name.compareTo(s2.name);
+        }
+    }
+
+    public static class ScoreComparator implements Comparator<Student> {
+        @Override
+        public int compare(Student s1, Student s2) {
+            return Integer.compare(s1.score, s2.score);
+        }
+    }
+}
+```
+
+Now, we can use these comparators just like before:
+
+``` java
+List<Student> students = new ArrayList<>();
+students.add(new Student("Alice", 22, 90));
+students.add(new Student("Bob", 19, 85));
+students.add(new Student("Charlie", 20, 88));
+
+// Sorting by Age
+Collections.sort(students, new Student.AgeComparator());
+
+// Sorting by Name
+Collections.sort(students, new Student.NameComparator());
+```
+
+2. Combining Multiple Comparators:
+
+You can merge different comparators into one by adding a data member to a comparator that allows you to choose different sorting strategies. This is useful when you want to combine multiple criteria into a single comparator class.
+
+Example:
+
+``` java
+public class MultiCriteriaComparator implements Comparator<Student> {
+    private final String criteria;
+
+    public MultiCriteriaComparator(String criteria) {
+        this.criteria = criteria;
+    }
+
+    @Override
+    public int compare(Student s1, Student s2) {
+        switch (criteria) {
+            case "age":
+                return Integer.compare(s1.age, s2.age);
+            case "name":
+                return s1.name.compareTo(s2.name);
+            case "score":
+                return Integer.compare(s1.score, s2.score);
+            default:
+                return 0;
+        }
+    }
+}
+```
+
+Now, you can use this comparator to sort by any criteria dynamically:
+
+``` java
+List<Student> students = new ArrayList<>();
+students.add(new Student("Alice", 22, 90));
+students.add(new Student("Bob", 19, 85));
+students.add(new Student("Charlie", 20, 88));
+
+// Sorting by Age
+Collections.sort(students, new MultiCriteriaComparator("age"));
+
+// Sorting by Name
+Collections.sort(students, new MultiCriteriaComparator("name"));
+```
+
+In this way, you can avoid having multiple individual comparators and instead use a flexible comparator that adjusts based on a specified rule.
